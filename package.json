@@ -1,0 +1,11 @@
+{
+  "name": "zTree",
+  "description": "A jQuery tree plugin",
+  "author": "zTree",
+  "version": "3.4",
+  "repository": "git@github.com:swain/zTree.git",
+  "homepage": "https://github.com/swain/zTree",
+  "bugs": {
+    "url": "https://github.com/swain/zTree/issues"
+  }
+}
