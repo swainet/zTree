@@ -2,7 +2,7 @@
   "name": "ztree",
   "description": "A jQuery tree plugin",
   "author": "zTree",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "repository": "git@github.com:swain/zTree.git",
   "homepage": "https://github.com/swain/zTree",
   "bugs": {
