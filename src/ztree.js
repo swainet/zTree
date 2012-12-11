@@ -1,6 +1,6 @@
 
 /*
- * JQuery zTree core 3.4
+ * JQuery zTree core 3.5
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -9,7 +9,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-09-03
+ * Date: 2012-11-20
  */
 (function($){
 	var settings = {}, roots = {}, caches = {},
@@ -94,6 +94,7 @@
 		callback: {
 			beforeAsync:null,
 			beforeClick:null,
+			beforeDblClick:null,
 			beforeRightClick:null,
 			beforeMouseDown:null,
 			beforeMouseUp:null,
@@ -105,6 +106,7 @@
 			onAsyncSuccess:null,
 			onNodeCreated:null,
 			onClick:null,
+			onDblClick:null,
 			onRightClick:null,
 			onMouseDown:null,
 			onMouseUp:null,
@@ -127,6 +129,7 @@
 		r.noSelection = true;
 		r.createdNodes = [];
 		r.zId = 0;
+		r._ver = (new Date()).getTime();
 	},
 	//default cache of core
 	_initCache = function(setting) {
@@ -728,26 +731,15 @@
 			var childKey = setting.data.key.children;
 			return (setting.async.enable && node && node.isParent && !(node.zAsync || (node[childKey] && node[childKey].length > 0)));
 		},
-		clone: function (jsonObj) {
-			var buf;
-			if (jsonObj instanceof Array) {
-				buf = [];
-				var i = jsonObj.length;
-				while (i--) {
-					buf[i] = arguments.callee(jsonObj[i]);
+		clone: function (obj){
+			if (obj === null) return null;
+			var o = obj.constructor === Array ? [] : {};
+			for(var i in obj){
+				if(obj.hasOwnProperty(i)){
+					o[i] = typeof obj[i] === "object" ? arguments.callee(obj[i]) : obj[i];
 				}
-				return buf;
-			}else if (typeof jsonObj == "function"){
-				return jsonObj;
-			}else if (jsonObj instanceof Object){
-				buf = {};
-				for (var k in jsonObj) {
-					buf[k] = arguments.callee(jsonObj[k]);
-				}
-				return buf;
-			}else{
-				return jsonObj;
 			}
+			return o;
 		},
 		eqs: function(str1, str2) {
 			return str1.toLowerCase() === str2.toLowerCase();
@@ -924,6 +916,7 @@
 			if (tmpParam.length > 1) tmpParam = tmpParam.substring(0, tmpParam.length-1);
 			if (isJson) tmpParam += "}";
 
+			var _tmpV = data.getRoot(setting)._ver;
 			$.ajax({
 				contentType: setting.async.contentType,
 				type: setting.async.type,
@@ -931,6 +924,9 @@
 				data: tmpParam,
 				dataType: setting.async.dataType,
 				success: function(msg) {
+					if (_tmpV != data.getRoot(setting)._ver) {
+						return;
+					}
 					var newNodes = [];
 					try {
 						if (!msg || msg.length == 0) {
@@ -959,6 +955,9 @@
 					tools.apply(callback);
 				},
 				error: function(XMLHttpRequest, textStatus, errorThrown) {
+					if (_tmpV != data.getRoot(setting)._ver) {
+						return;
+					}
 					if (node) node.isAjaxing = null;
 					view.setNodeLineIcos(setting, node);
 					setting.treeObj.trigger(consts.event.ASYNC_ERROR, [setting.treeId, node, XMLHttpRequest, textStatus, errorThrown]);
@@ -971,7 +970,6 @@
 			for (var i=0, j=list.length-1; j>=i; j--) {
 				if (!node || node === list[j]) {
 					$("#" + list[j].tId + consts.id.A).removeClass(consts.node.CURSELECTED);
-					view.setNodeName(setting, list[j]);
 					if (node) {
 						data.removeSelectedNode(setting, node);
 						break;
@@ -1036,13 +1034,13 @@
 				};
 				root.expandTriggerFlag = false;
 			}
-			if (node.open == expandFlag) {
-				tools.apply(callback, []);
-				return;
-			}
 			if (!node.open && node.isParent && ((!$("#" + node.tId + consts.id.UL).get(0)) || (node[childKey] && node[childKey].length>0 && !$("#" + node[childKey][0].tId).get(0)))) {
 				view.appendParentULDom(setting, node);
 				view.createNodeCallback(setting);
+			}
+			if (node.open == expandFlag) {
+				tools.apply(callback, []);
+				return;
 			}
 			var ulObj = $("#" + node.tId + consts.id.UL),
 			switchObj = $("#" + node.tId + consts.id.SWITCH),
@@ -1234,18 +1232,18 @@
 				$("#" + node.tId + consts.id.UL).empty();
 			}
 		},
-                setFirstNode: function(setting, parentNode) {
-                    var childKey = setting.data.key.children, childLength = parentNode[childKey].length;
-                    if ( childLength > 0) {
-                        parentNode[childKey][0].isFirstNode = true;
-                    }
-                },
-                setLastNode: function(setting, parentNode) {
-                    var childKey = setting.data.key.children, childLength = parentNode[childKey].length;
-                    if ( childLength > 0) {
-                        parentNode[childKey][childLength - 1].isLastNode = true;
-                    }
-                },
+		setFirstNode: function(setting, parentNode) {
+			var childKey = setting.data.key.children, childLength = parentNode[childKey].length;
+			if ( childLength > 0) {
+				parentNode[childKey][0].isFirstNode = true;
+			}
+		},
+		setLastNode: function(setting, parentNode) {
+			var childKey = setting.data.key.children, childLength = parentNode[childKey].length;
+			if ( childLength > 0) {
+				parentNode[childKey][childLength - 1].isLastNode = true;
+			}
+		},
 		removeNode: function(setting, node) {
 			var root = data.getRoot(setting),
 			childKey = setting.data.key.children,
@@ -1524,12 +1522,12 @@
 					data.getRoot(setting).expandTriggerFlag = callbackFlag;
 					if (sonSign) {
 						view.expandCollapseSonNode(this.setting, node, expandFlag, true, function() {
-							if (focus !== false) {$("#" + node.tId).focus().blur();}
+							if (focus !== false) {try{$("#" + node.tId).focus().blur();}catch(e){}}
 						});
 					} else {
 						node.open = !expandFlag;
 						view.switchNode(this.setting, node);
-						if (focus !== false) {$("#" + node.tId).focus().blur();}
+						if (focus !== false) {try{$("#" + node.tId).focus().blur();}catch(e){}}
 					}
 					return expandFlag;
 				},
@@ -1582,7 +1580,12 @@
 						parentNode = data.getRoot(this.setting);
 					}
 					if (reloadType=="refresh") {
-						parentNode[this.setting.data.key.children] = [];
+						var childKey = this.setting.data.key.children;
+						for (var i = 0, l = parentNode[childKey].length; i < l; i++) {
+							data.removeNodeCache(setting, parentNode[childKey][i]);
+						}
+						data.removeSelectedNode(setting);
+						parentNode[childKey] = [];
 						if (isRoot) {
 							this.setting.treeObj.empty();
 						} else {
@@ -1623,10 +1626,10 @@
 						addFlag = setting.view.selectedMulti && addFlag;
 						if (node.parentTId) {
 							view.expandCollapseParentNode(this.setting, node.getParentNode(), true, false, function() {
-								$("#" + node.tId).focus().blur();
+								try{$("#" + node.tId).focus().blur();}catch(e){}
 							});
 						} else {
-							$("#" + node.tId).focus().blur();
+							try{$("#" + node.tId).focus().blur();}catch(e){}
 						}
 						view.selectNode(this.setting, node, addFlag);
 					}
@@ -1665,7 +1668,7 @@
 	consts = zt.consts;
 })(jQuery);
 /*
- * JQuery zTree excheck 3.4
+ * JQuery zTree excheck 3.5
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -1674,7 +1677,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-09-03
+ * Date: 2012-11-20
  */
 (function($){
 	//default consts of excheck
@@ -1735,8 +1738,8 @@
 	_bindEvent = function(setting) {
 		var o = setting.treeObj,
 		c = consts.event;
-		o.bind(c.CHECK, function (event, treeId, node) {
-			tools.apply(setting.callback.onCheck, [event, treeId, node]);
+		o.bind(c.CHECK, function (event, srcEvent, treeId, node) {
+			tools.apply(setting.callback.onCheck, [!!srcEvent?srcEvent : event, treeId, node]);
 		});
 	},
 	_unbindEvent = function(setting) {
@@ -1843,7 +1846,7 @@
 				view.setChkClass(this.setting, checkObj, node);
 				view.repairParentChkClassWithSelf(this.setting, node);
 				if (callbackFlag) {
-					setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+					setting.treeObj.trigger(consts.event.CHECK, [null, setting.treeId, node]);
 				}
 			}
 		}
@@ -2003,7 +2006,7 @@
 			var checkObj = $("#" + node.tId + consts.id.CHECK);
 			view.setChkClass(setting, checkObj, node);
 			view.repairParentChkClassWithSelf(setting, node);
-			setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+			setting.treeObj.trigger(consts.event.CHECK, [event, setting.treeId, node]);
 			return true;
 		},
 		onMouseoverCheck: function(event, node) {
@@ -2286,7 +2289,7 @@
 	}
 })(jQuery);
 /*
- * JQuery zTree exedit 3.4
+ * JQuery zTree exedit 3.5
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -2295,7 +2298,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-09-03
+ * Date: 2012-11-20
  */
 (function($){
 	//default consts of exedit
@@ -2959,7 +2962,7 @@
 								if (isCopy) {
 									view.addNodes(targetSetting, dragTargetNode.getParentNode(), newNodes);
 								}
-								if (moveType == consts.move.TYPE_PREV) {
+								if (moveType != consts.move.TYPE_NEXT) {
 									for (i=0, l=newNodes.length; i<l; i++) {
 										view.moveNode(targetSetting, dragTargetNode, newNodes[i], moveType, false);
 									}
