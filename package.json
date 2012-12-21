@@ -1,11 +1,8 @@
 {
   "name": "ztree",
   "description": "A jQuery tree plugin",
-  "author": "zTree",
+  "author": "Hunter.z",
   "version": "3.5.01",
-  "repository": "git@github.com:swain/zTree.git",
-  "homepage": "https://github.com/swain/zTree",
-  "bugs": {
-    "url": "https://github.com/swain/zTree/issues"
-  }
+  "repository": "git@github.com:jsw0528/zTree.git",
+  "homepage": "http://www.ztree.me/v3/main.php"
 }
