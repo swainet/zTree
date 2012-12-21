@@ -1,5 +1,5 @@
 /*
- * JQuery zTree excheck 3.5
+ * JQuery zTree excheck 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-11-20
+ * Date: 2012-12-21
  */
 (function($){
 	//default consts of excheck
@@ -511,7 +511,7 @@
 				node[checkedKey] = value;
 				view.setChkClass(setting, checkObj, node);
 				if (setting.check.autoCheckTrigger && node != srcNode && node.nocheck !== true) {
-					setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+					setting.treeObj.trigger(consts.event.CHECK, [null, setting.treeId, node]);
 				}
 			}
 			if (node.parentTId) {
@@ -559,7 +559,7 @@
 				}
 				view.setChkClass(setting, checkObj, node);
 				if (setting.check.autoCheckTrigger && node != srcNode && node.nocheck !== true) {
-					setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+					setting.treeObj.trigger(consts.event.CHECK, [null, setting.treeId, node]);
 				}
 			}
 

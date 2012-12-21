@@ -1,6 +1,6 @@
 
 /*
- * JQuery zTree core 3.5
+ * JQuery zTree core 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -9,7 +9,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-11-20
+ * Date: 2012-12-21
  */
 (function($){
 	var settings = {}, roots = {}, caches = {},
@@ -735,9 +735,7 @@
 			if (obj === null) return null;
 			var o = obj.constructor === Array ? [] : {};
 			for(var i in obj){
-				if(obj.hasOwnProperty(i)){
-					o[i] = typeof obj[i] === "object" ? arguments.callee(obj[i]) : obj[i];
-				}
+				o[i] = (obj[i] instanceof Date) ? new Date(obj[i].getTime()) : (typeof obj[i] === "object" ? arguments.callee(obj[i]) : obj[i]);
 			}
 			return o;
 		},
@@ -1581,7 +1579,7 @@
 					}
 					if (reloadType=="refresh") {
 						var childKey = this.setting.data.key.children;
-						for (var i = 0, l = parentNode[childKey].length; i < l; i++) {
+						for (var i = 0, l = parentNode[childKey] ? parentNode[childKey].length : 0; i < l; i++) {
 							data.removeNodeCache(setting, parentNode[childKey][i]);
 						}
 						data.removeSelectedNode(setting);
@@ -1668,7 +1666,7 @@
 	consts = zt.consts;
 })(jQuery);
 /*
- * JQuery zTree excheck 3.5
+ * JQuery zTree excheck 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -1677,7 +1675,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-11-20
+ * Date: 2012-12-21
  */
 (function($){
 	//default consts of excheck
@@ -2180,7 +2178,7 @@
 				node[checkedKey] = value;
 				view.setChkClass(setting, checkObj, node);
 				if (setting.check.autoCheckTrigger && node != srcNode && node.nocheck !== true) {
-					setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+					setting.treeObj.trigger(consts.event.CHECK, [null, setting.treeId, node]);
 				}
 			}
 			if (node.parentTId) {
@@ -2228,7 +2226,7 @@
 				}
 				view.setChkClass(setting, checkObj, node);
 				if (setting.check.autoCheckTrigger && node != srcNode && node.nocheck !== true) {
-					setting.treeObj.trigger(consts.event.CHECK, [setting.treeId, node]);
+					setting.treeObj.trigger(consts.event.CHECK, [null, setting.treeId, node]);
 				}
 			}
 
@@ -2289,7 +2287,7 @@
 	}
 })(jQuery);
 /*
- * JQuery zTree exedit 3.5
+ * JQuery zTree exedit 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -2298,7 +2296,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-11-20
+ * Date: 2012-12-21
  */
 (function($){
 	//default consts of exedit
@@ -3122,7 +3120,6 @@
 				var inputObj = root.curEditInput;
 				var newName = forceName ? forceName:inputObj.val();
 				if (!forceName && tools.apply(setting.callback.beforeRename, [setting.treeId, node, newName], true) === false) {
-					node.editNameFlag = true;
 					return false;
 				} else {
 					node[nameKey] = newName ? newName:inputObj.val();
@@ -3434,8 +3431,9 @@
 		}
 	}
 
+	var _makeNodeUrl = view.makeNodeUrl;
 	view.makeNodeUrl = function(setting, node) {
-		return (node.url && !setting.edit.enable) ? node.url : null;
+		return setting.edit.enable ? null : (_makeNodeUrl.apply(view, arguments));
 	}
 
 	var _removeNode = view.removeNode;

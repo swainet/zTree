@@ -1,5 +1,5 @@
 /*
- * JQuery zTree exedit 3.5
+ * JQuery zTree exedit 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-11-20
+ * Date: 2012-12-21
  */
 (function($){
 	//default consts of exedit
@@ -832,7 +832,6 @@
 				var inputObj = root.curEditInput;
 				var newName = forceName ? forceName:inputObj.val();
 				if (!forceName && tools.apply(setting.callback.beforeRename, [setting.treeId, node, newName], true) === false) {
-					node.editNameFlag = true;
 					return false;
 				} else {
 					node[nameKey] = newName ? newName:inputObj.val();
@@ -1144,8 +1143,9 @@
 		}
 	}
 
+	var _makeNodeUrl = view.makeNodeUrl;
 	view.makeNodeUrl = function(setting, node) {
-		return (node.url && !setting.edit.enable) ? node.url : null;
+		return setting.edit.enable ? null : (_makeNodeUrl.apply(view, arguments));
 	}
 
 	var _removeNode = view.removeNode;
