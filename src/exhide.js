@@ -1,5 +1,5 @@
 /*
- * JQuery zTree exHideNodes 3.4
+ * JQuery zTree exHideNodes 3.5.01
  * http://zTree.me/
  *
  * Copyright (c) 2010 Hunter.z
@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  * email: hunter.z@263.net
- * Date: 2012-09-03
+ * Date: 2012-12-21
  */
 (function($){
 	//default init node of exLib
@@ -327,6 +327,16 @@
 				}
 			}
 			return _getTreeChangeCheckedNodes.apply(data, arguments);
+		}
+	}
+
+	var _expandCollapseSonNode = view.expandCollapseSonNode;
+	if (!!_expandCollapseSonNode) {
+		view.expandCollapseSonNode = function(setting, node, expandFlag, animateFlag, callback) {
+			if (!!node && !!node.isHidden) {
+				return;
+			}
+			_expandCollapseSonNode.apply(view, arguments);
 		}
 	}
 
